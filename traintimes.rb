@@ -1,15 +1,10 @@
 require 'rubygems'
-require 'rubyful_soup'
-require 'open-uri'
+
 require 'twitter'
+require 'open-uri'
+require 'rubyful_soup'
+
 require File.join(File.dirname(__FILE__), 'helpers', 'config_store')
-
-# Run via a cron job at 7:45am and 5:30pm
-
-# load the page for the 8:13 train and the 6.23 train
-# scrape the results
-# send me a DM with the line containing those trains
-
 config = ConfigStore.new(File.join(File.dirname(__FILE__), '.twitter'))
 oauth = Twitter::OAuth.new(config['token'], config['secret'])
 
@@ -31,53 +26,40 @@ else
       'rsecret' => oauth.request_token.secret,
     })
 
-  # A better implementation is available at http://gist.github.com/524376
-  puts "Authorize this request at the following url:"
-  puts oauth.request_token.authorize_url
-  puts "Then add an entry for ping to the .twitter config store"
+  puts <<EOS
+Visit #{oauth.request_token.authorize_url} in your browser to authorize the app,
+then enter the PIN you are given:
+EOS
+
+  pin = STDIN.readline.chomp
+  config.update({ 'pin' => pin })
+  exit('Run this script again, now that you are authorised')
 end
-  
 
-trains = {
-  :morning => {
-    :time => '08:13',
-    :info => 'Dartford to Charing Cross',
-    :url => 'http://traintimes.org.uk/dartford/london+charing+cross/08:00/today/overtake=1'
-  },
-  :evening => {
-    :time => '18:23',
-    :info => 'Charing Cross to Dartford',
-    :url => 'http://traintimes.org.uk/london+charing+cross/dartford/18:15/today/overtake=1'
-  },
-  :test => {
-    :time => '22:39',
-    :info => 'Charing Test to Darttest',
-    :url => 'http://traintimes.org.uk/london+charing+cross/dartford/22:20/today/overtake=1'
-  }
-}
+trains = YAML::load(File.read(File.join(File.dirname(__FILE__), 'trains.yml')))
+hours = trains.keys.collect{ |time| time.split(':')[0].to_i }
 
-# If we're running at 5pm, look for evening trains. Otherwise, look for morning trains.
-# - todo, make this better by putting all the trains data into a config file
-# -       and use the :time key to check what trains to search for
-#
-# Run @hourly, check each of the hour keys in the trains hash, then run the rest...
-hour = Time.now.hour
-key = (hour == 17 ? :evening : :morning)
+if hours.include?(Time.now.hour)
+  train = trains.select{ |k, v| (k.split(':')[0].to_i == Time.now.utc.hour) }
 
-url = trains[key][:url]
-info = trains[key][:info]
-time = trains[key][:time]
+  trains.each do |time|
+    if (Time.parse(time[0]).hour == Time.now.hour)
+      info = time[1][:info]
+      url = time[1][:url]
 
-# Digest the page and DM me the details
-# - todo, only DM me if there are problems with the train
-open(url) do |page|
-  page_content = page.read()
-  soup = BeautifulSoup.new(page_content)
-  result = soup.find_all('p', :attrs => {'align' => 'center'})[0].find_all('li')
-  result.each do |tag|
-    if tag.to_s.include?(time)
-      dm = tag.to_s.gsub(/<\/?[^>]*>/, '').gsub('%ndash', '-').split('iCal')[0].chop + ' ~ ' + info
-      twitter.direct_message_create('suttree', dm)
+      # Digest the page and DM me the details
+      open(url) do |page|
+        page_content = page.read()
+        soup = BeautifulSoup.new(page_content)
+        result = soup.find_all('p', :attrs => {'align' => 'center'})[0].find_all('li')
+        result.each do |tag|
+          if tag.to_s.include?(time[0].to_s)
+            dm = tag.to_s.gsub(/<\/?[^>]*>/, '').gsub('%ndash', '-').split('iCal')[0].chop + ' ~ ' + info
+            puts "Sending dm: #{dm}..."
+            twitter.direct_message_create('suttree', dm)
+          end
+        end
+      end
     end
   end
 end

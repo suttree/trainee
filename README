@@ -1,1 +1,27 @@
-trainee - SMS travel alerts using the traintimes.org.uk website, the incredible BeautifulSoup parser and Twitter DMs that you can choose to have sent as SMS messages.
+=trainee=
+
+==SMS travel alerts using the traintimes.org.uk website, the incredible BeautifulSoup parser and Twitter DMs that you can choose to have sent as SMS messages.==
+
+All you need are a few ruby gems, an oauth token and secret from twitter.com/apps and a cron job to periodically run the script
+
+INSTALL
+
+- install the twitter and rubyful_soup gems
+- setup the .twitter file with your twitter auth details, an example file (dot-twitter-example) is provided 
+- setup the trains.yml file as required, an example file (trains-example.yml) is provided
+- add an entry to your cron file to run the script as often as you'd like
+
+
+CRON EXAMPLES
+
+- Early each weekday morning:
+30 6 * * 1-5 /usr/bin/ruby /home/suttree/src/twitter/traintimes.rb >> /dev/null 2>&1
+
+- On the hour, every hour:
+@hourly /usr/bin/ruby /home/suttree/src/twitter/traintimes.rb >> /dev/null 2>&1
+
+TWITTER SETUP
+
+- Go to http://twitter.com/apps and register an application that you will use to send DMs, and subsequently SMSs, to yourself.
+- Then edit your twitter mobile settings at http://twitter.com/devices
+              - Run once, add something about pin entry in the .twitter file too
