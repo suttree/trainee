@@ -12,7 +12,6 @@ INSTALL
 - setup the trains.yml file as required, an example file (trains-example.yml) is provided
 - add an entry to your cron file to run the script as often as you'd like
 
-
 CRON EXAMPLES
 
 - Early each weekday morning:
@@ -26,3 +25,8 @@ TWITTER SETUP
 - Go to http://twitter.com/apps and register an application that you will use to send DMs, and subsequently SMSs, to yourself.
 - Then edit your twitter mobile settings at http://twitter.com/devices
 - Run once, add something about pin entry in the .twitter file too
+- Note that the first time you try running this, you'll need to do the OAuth PIN dance. Once you have the relelvant authorisation code, add that to your .twitter file (see dot-twitter-example) to see how it's done. From then on, the script should run without any user intervention.
+
+TODO
+
+- A better html parser to only send alerts when the train is delayed, rather than every time it is listed as happens now.
