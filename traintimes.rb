@@ -51,10 +51,15 @@ if hours.include?(Time.now.hour)
       open(url) do |page|
         page_content = page.read()
         soup = BeautifulSoup.new(page_content)
-        result = soup.find_all('p', :attrs => {'align' => 'center'})[0].find_all('li')
+        result = soup.find('a', :attrs => {'class' => 'status'}).parent
         result.each do |tag|
-          if tag.to_s.include?(time[0].to_s)
-            dm = tag.to_s.gsub(/<\/?[^>]*>/, '').gsub('%ndash', '-').split('iCal')[0].chop + ' ~ ' + info
+          tag = tag.to_s
+          if tag.include?(time[0].to_s)
+            next if tag.include?('changes')
+
+            status_text = soup.find('a', :attrs => {'class' => 'status'}).to_s.gsub(/<\/?[^>]*>/, '')
+            dm = tag.to_s.gsub(/<\/?[^>]*>/, '').gsub('%ndash', '-').gsub(/[\t|\n]/,'').split('iCal')[0].chop + " *#{status_text}* " + ' ~ [info here]'
+            dm = dm.gsub(/\s+/, ' ')
             puts "Sending dm: #{dm}..."
             twitter.direct_message_create('suttree', dm)
           end
