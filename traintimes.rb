@@ -58,7 +58,7 @@ if hours.include?(Time.now.hour)
             next if tag.include?('changes')
 
             status_text = soup.find('a', :attrs => {'class' => 'status'}).to_s.gsub(/<\/?[^>]*>/, '')
-            dm = tag.to_s.gsub(/<\/?[^>]*>/, '').gsub('%ndash', '-').gsub(/[\t|\n]/,'').split('iCal')[0].chop + " *#{status_text}* " + ' ~ [info here]'
+            dm = tag.to_s.gsub(/<\/?[^>]*>/, '').gsub('%ndash', '-').gsub(/[\t|\n]/,'').split('iCal')[0].chop + " *#{status_text}* " + " ~ #{info}"
             dm = dm.gsub(/\s+/, ' ')
             puts "Sending dm: #{dm}..."
             twitter.direct_message_create('suttree', dm)
@@ -67,4 +67,6 @@ if hours.include?(Time.now.hour)
       end
     end
   end
+else
+  puts "No matching hours in #{hours.join(', ')} for #{Time.now.hour}"
 end
