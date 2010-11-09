@@ -52,6 +52,7 @@ if hours.include?(Time.now.hour)
         page_content = page.read()
         soup = BeautifulSoup.new(page_content)
         result = soup.find('a', :attrs => {'class' => 'status'}).parent
+        result = [] if result.nil?
         result.each do |tag|
           tag = tag.to_s
           if tag.include?(time[0].to_s)
