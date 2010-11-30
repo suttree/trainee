@@ -49,23 +49,24 @@ if hours.include?(Time.now.hour)
 
       # Digest the page and DM me the details
       open(url) do |page|
-        page_content = page.read()
-        soup = BeautifulSoup.new(page_content)
-        result = soup.find('a', :attrs => {'class' => 'status'}).parent
-        result = [] if result.nil?
-        result.each do |tag|
-          tag = tag.to_s
-          if tag.include?(time[0].to_s)
-            next if tag.include?('changes')
+        @page_content = page.read()
+      end
 
-            status_text = soup.find('a', :attrs => {'class' => 'status'}).to_s.gsub(/<\/?[^>]*>/, '')
-            dm = tag.to_s.gsub(/<\/?[^>]*>/, '').gsub('%ndash', '-').gsub(/[\t|\n]/,'').split('iCal')[0].chop + " *#{status_text}* " + " ~ #{info}"
-            dm = dm.gsub(/\s+/, ' ')
-            puts "Sending dm: #{dm}..."
-            twitter.direct_message_create('suttree', dm)
-          end
+      soup = BeautifulSoup.new(@page_content)
+      result = soup.find('a', :attrs => {'class' => 'status'}).parent rescue []
+      result.each do |tag|
+        tag = tag.to_s
+        if tag.include?(time[0].to_s)
+          next if tag.include?('changes')
+
+          status_text = soup.find('a', :attrs => {'class' => 'status'}).to_s.gsub(/<\/?[^>]*>/, '')
+          dm = tag.to_s.gsub(/<\/?[^>]*>/, '').gsub('%ndash', '-').gsub(/[\t|\n]/,'').split('iCal')[0].chop + " *#{status_text}* " + " ~ #{info}"
+          dm = dm.gsub(/\s+/, ' ')
+          puts "Sending dm: #{dm}..."
+          twitter.direct_message_create('suttree', dm)
         end
       end
+      puts @page_content.inspect
     end
   end
 else
